@@ -37,6 +37,7 @@ add_back_button_hitbox = pygame.Rect(20, 20, 35, 40)
 daily_button_hitbox = pygame.Rect(50, 160, 120, 40)
 weekly_button_hitbox = pygame.Rect(190, 160, 120, 40)
 once_button_hitbox = pygame.Rect(330, 160, 120, 40)
+save_button_hitbox = pygame.Rect(750, 425, 30, 30)
 
 #State
 current_screen = "main"
@@ -49,8 +50,8 @@ chores = [
 ]
 checked = {}
 recurrence_button_select = ""
-
 input_text = ""
+add_selected_days = []
 
 
 
@@ -140,6 +141,7 @@ def draw_main_screen():
         screen.blit(label_surface, (box_x + box_size + 10, box_y))
 
 def draw_add_screen():
+    global add_selected_days
     #Title and back button
     title_surface = title_font.render("Add Screen", True, WHITE)
     title_rect = title_surface.get_rect(center=(WIDTH // 2, title_y))
@@ -169,25 +171,52 @@ def draw_add_screen():
         screen.blit(daily_label, daily_label_rect)
 
     #Weekly
-    
-    pygame.draw.rect(screen, WHITE, (190, 160, 120, 40), 2)  # Weekly
     weekly_label = label_font.render("Weekly", True, WHITE)
     weekly_label_rect = weekly_label.get_rect(center=(250,180))
-    screen.blit(weekly_label, weekly_label_rect)
+    if (recurrence_button_select != "weekly"):
+        pygame.draw.rect(screen, WHITE, (190, 160, 120, 40), 2)  # Weekly
+        screen.blit(weekly_label, weekly_label_rect)
 
-    pygame.draw.rect(screen, WHITE, (330, 160, 120, 40), 2)  # Once
-    once_label = label_font.render("Once", True, WHITE)
-    once_label_rect = once_label.get_rect(center=(390,180))
-    screen.blit(once_label,once_label_rect)
-
-    if(recurrence_button_select == "once"):
-        pygame.draw.rect(screen,WHITE,(330, 160, 120, 40))
-        once_label = label_font.render("Once", True, BLACK)
-        screen.blit(once_label,once_label_rect)
-    if(recurrence_button_select == "weekly"):
-        pygame.draw.rect(screen, WHITE, (190, 160, 120, 40))
+    elif(recurrence_button_select == "weekly"):
+        pygame.draw.rect(screen, WHITE, (190, 160, 120, 40))  # Once
         weekly_label = label_font.render("Weekly", True, BLACK)
         screen.blit(weekly_label,weekly_label_rect)
+
+        day_labels = ["M", "T", "W", "Thu", "F", "S", "Sun"]
+        for day in range(len(day_labels)):
+            day_box_x = 50 + (day * 100)
+            day_box_y = 220
+            if(day not in add_selected_days):
+                pygame.draw.rect(screen, WHITE, (day_box_x, day_box_y, 30, 30), 2)
+                day_label = label_font.render(day_labels[day], True, WHITE)
+                screen.blit(day_label, (day_box_x + 35, day_box_y + 2))
+            else:
+                pygame.draw.rect(screen, WHITE, (day_box_x, day_box_y, 30,30))
+                day_label = label_font.render(day_labels[day], True, WHITE)
+
+            screen.blit(day_label, (day_box_x + 35, day_box_y + 2))
+
+    #Save Button
+    pygame.draw.rect(screen, WHITE, (750, 425, 30, 30), 2)
+    pygame.draw.line(screen, WHITE, (755, 440), (762, 447), 3)
+    pygame.draw.line(screen, WHITE, (762, 447), (775, 433), 3)
+    save_button_label = label_font.render("Save", True, WHITE)
+    screen.blit(save_button_label, (690, 425))
+
+
+
+
+
+    #Once
+    once_label = label_font.render("Once", True, WHITE)
+    once_label_rect = once_label.get_rect(center=(390,180))
+    if(recurrence_button_select != "once"):
+        pygame.draw.rect(screen,WHITE,(330, 160, 120, 40),2)
+        screen.blit(once_label,once_label_rect)
+    if(recurrence_button_select == "once"):
+        pygame.draw.rect(screen, WHITE, (330, 160, 120, 40))
+        once_label = label_font.render("Once", True, BLACK)
+        screen.blit(once_label,once_label_rect)
 
 
 def handle_events(event):
@@ -196,6 +225,7 @@ def handle_events(event):
     global selected_date
     global input_text
     global recurrence_button_select
+    global add_selected_days
     if event.type == pygame.QUIT:
                 
                 running = False
@@ -237,6 +267,16 @@ def handle_events(event):
                 recurrence_button_select = "daily"
             if(weekly_button_hitbox.collidepoint(event.pos)):
                 recurrence_button_select = "weekly"
+
+            day_labels = ["M", "T", "W", "Thu", "F", "S", "Sun"]
+            for day in (range(len(day_labels))):
+                day_box_x = 50 + (day * 100)
+                day_select_hitbox_rect = pygame.Rect(day_box_x, 220, 30, 30)
+                if (day_select_hitbox_rect.collidepoint(event.pos)):
+                    if day in add_selected_days:
+                        add_selected_days.remove(day)
+                    else:
+                        add_selected_days.append(day)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
