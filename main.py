@@ -38,6 +38,7 @@ daily_button_hitbox = pygame.Rect(50, 160, 120, 40)
 weekly_button_hitbox = pygame.Rect(190, 160, 120, 40)
 once_button_hitbox = pygame.Rect(330, 160, 120, 40)
 save_button_hitbox = pygame.Rect(750, 425, 30, 30)
+edit_button_hitbox = pygame.Rect(20, 425, 30, 30)
 
 #State
 current_screen = "main"
@@ -52,6 +53,7 @@ checked = {}
 recurrence_button_select = ""
 input_text = ""
 add_selected_days = []
+edit_mode = False
 
 
 
@@ -94,13 +96,15 @@ def get_checked(date):
     date_key = str(date)
     if date_key not in checked:
         checked[date_key]= {}
-        for chore in get_chores_for_date(date):
-            chore_name = chore["name"]
+    for chore in get_chores_for_date(date):
+        chore_name = chore["name"]
+        if chore_name not in checked[date_key]:
             checked[date_key][chore_name] = False
     return checked[date_key]
 
 
 def draw_main_screen():
+    global edit_mode
     # Fill screen and draw title
     title_surface = title_font.render("Chore Board", True, WHITE)
     title_rect = title_surface.get_rect(center=(WIDTH // 2, title_y))
@@ -139,6 +143,16 @@ def draw_main_screen():
     
         label_surface = label_font.render(day_chores[i]["name"], True, WHITE)
         screen.blit(label_surface, (box_x + box_size + 10, box_y))
+        if edit_mode:
+            x_pos = box_x + box_size + 10 + label_surface.get_width() + 15
+            pygame.draw.line(screen, WHITE, (x_pos + 5, box_y + 5), (x_pos + 25, box_y + 25), 3)
+            pygame.draw.line(screen, WHITE, (x_pos + 25, box_y + 5), (x_pos + 5, box_y + 25), 3)
+
+    #Edit Button
+        pygame.draw.rect(screen, WHITE, (20, 425, 30, 30), 2)
+        pygame.draw.line(screen, WHITE, (26, 440), (44, 440), 2)
+        edit_button_surface = label_font.render("Edit", True, WHITE)
+        screen.blit(edit_button_surface, (55, 425))
 
 def draw_add_screen():
     global add_selected_days
@@ -226,6 +240,7 @@ def handle_events(event):
     global input_text
     global recurrence_button_select
     global add_selected_days
+    global edit_mode
     if event.type == pygame.QUIT:
                 
                 running = False
@@ -253,8 +268,21 @@ def handle_events(event):
 
             if(add_button_hitbox.collidepoint(event.pos)):
                 current_screen = "add"
+            if(edit_button_hitbox.collidepoint(event.pos)):
+                edit_mode = not edit_mode 
 
-    if current_screen == "add":
+            #If Edit mode True  
+            if edit_mode:
+                for i in range(len(day_chores)):
+                    box_y = init_y + (i * spacing)
+                    label_surface = label_font.render(day_chores[i]["name"], True, WHITE)
+                    x_pos = box_x + box_size + 10 + label_surface.get_width() + 15
+                    x_hitbox = pygame.Rect(x_pos, box_y, 30, 30)
+                    if x_hitbox.collidepoint(event.pos):
+                        chores.remove(day_chores[i])
+                        break
+
+    elif current_screen == "add":
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos      
             if(add_back_button_hitbox.collidepoint(event.pos)):
@@ -277,12 +305,30 @@ def handle_events(event):
                         add_selected_days.remove(day)
                     else:
                         add_selected_days.append(day)
+            if(save_button_hitbox.collidepoint(event.pos)):
+                if input_text == "" or recurrence_button_select == "":
+                    pass
+                else:
+                    if(recurrence_button_select == "daily"):
+                        new_chore = {"name": input_text, "type": "daily"}
+                        chores.append(new_chore)
+                    if(recurrence_button_select == "weekly"):
+                        new_chore = {"name": input_text, "type": "weekly", "days": add_selected_days}
+                        chores.append(new_chore)
+                    if(recurrence_button_select == "once"):
+                        new_chore = {"name": input_text, "type": "once", "date": str(selected_date)}
+                        chores.append(new_chore)
+                    save_data()
+                    input_text, recurrence_button_select, add_selected_days = "", "", []
+                    current_screen = "main"
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 input_text = input_text[:-1]
             else:
                 input_text += event.unicode
+
+        
 
                      
 load_data()
