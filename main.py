@@ -60,6 +60,65 @@ input_text = ""
 add_selected_days = []
 edit_mode = False
 add_once_date = datetime.date.today()
+keyboard_visible = False
+
+# Keyboard stuff 
+key_rows = [
+    list("QWERTYUIOP"),
+    list("ASDFGHJKL"),
+    list("ZXCVBNM") + ["BACK"],
+    ["SPACE"],
+]
+key_width = 55
+key_height = 35
+key_gap = 5
+keyboard_y = 310
+
+def get_key_rects():
+    rects = {}
+    for row_index, row in enumerate(key_rows):
+        y = keyboard_y + row_index * (key_height + key_gap)
+        if row == ["SPACE"]:
+            total_width = 10 * key_width + 9 * key_gap
+            x = (WIDTH - total_width) // 2
+            rects["SPACE"] = pygame.Rect(x, y, total_width, key_height)
+        else:
+            total_width = len(row) * key_width + (len(row) - 1) * key_gap
+            start_x = (WIDTH - total_width) // 2
+            for key_index, key in enumerate(row):
+                x = start_x + key_index * (key_width + key_gap)
+                w = key_width
+                if key == "BACK":
+                    w = key_width + 20
+                rects[key] = pygame.Rect(x, y, w, key_height)
+    return rects
+
+def draw_keyboard():
+    rects = get_key_rects()
+    for key, rect in rects.items():
+        pygame.draw.rect(screen, DIM_GREEN, rect, 2)
+        if key == "SPACE":
+            label = small_font.render("SPACE", True, GREEN)
+        elif key == "BACK":
+            label = small_font.render("DEL", True, AMBER)
+        else:
+            label = small_font.render(key, True, GREEN)
+        label_rect = label.get_rect(center=rect.center)
+        screen.blit(label, label_rect)
+
+def handle_keyboard_tap(pos):
+    global input_text
+    rects = get_key_rects()
+    for key, rect in rects.items():
+        if rect.collidepoint(pos):
+            if key == "BACK":
+                input_text = input_text[:-1]
+            elif key == "SPACE":
+                input_text += " "
+            else:
+                input_text += key.lower()
+            return True
+    return False
 
 # Scanline surface for CRT effect - **Written by Claude** 
 scanline_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -275,6 +334,9 @@ def draw_add_screen():
     save_label = small_font.render("SAVE", True, GREEN)
     screen.blit(save_label, (693, 430))
 
+    if keyboard_visible:
+        draw_keyboard()
+
     # Scanline overlay
     screen.blit(scanline_surface, (0, 0))
 
@@ -288,6 +350,7 @@ def handle_events(event):
     global add_selected_days
     global edit_mode
     global add_once_date
+    global keyboard_visible
     if event.type == pygame.QUIT:
                 running = False
 
@@ -332,6 +395,15 @@ def handle_events(event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos
 
+
+            # Toggle keyboard when input box is tapped
+            input_box_rect = pygame.Rect(50, 110, 500, 40)
+            if input_box_rect.collidepoint(event.pos):
+                keyboard_visible = not keyboard_visible
+
+            if keyboard_visible:
+                handle_keyboard_tap(event.pos)
+
             # If Back button is clicked 
             if(add_back_button_hitbox.collidepoint(event.pos)):
                 current_screen = "main"
@@ -375,6 +447,7 @@ def handle_events(event):
                     save_data()
                     input_text, recurrence_button_select, add_selected_days = "", "", []
                     add_once_date = datetime.date.today()
+                    keyboard_visible = False
                     current_screen = "main"
 
             #Once date select moving hitboxes based on width of date text 
