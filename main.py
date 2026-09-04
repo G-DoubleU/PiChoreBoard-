@@ -3,7 +3,6 @@ import sys
 import datetime
 import json
 import os 
-os.environ["SDL_VIDEO_KMSDRM_ORIENTATION"] = "270"
 font_dir = os.path.dirname(os.path.abspath(__file__))
 bold_path = os.path.join(font_dir, "Arvo-Bold.ttf")
 regular_path = os.path.join(font_dir, "Arvo-Regular.ttf")
