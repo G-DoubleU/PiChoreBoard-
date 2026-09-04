@@ -10,10 +10,9 @@ regular_path = os.path.join(font_dir, "Arvo-Regular.ttf")
 pygame.init()
 
 #Display
-WIDTH = 800
-HEIGHT = 480
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Chore Board")
+WIDTH = 1280
+HEIGHT = 720
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)pygame.display.set_caption("Chore Board")
 clock = pygame.time.Clock()
 
 #Colors
