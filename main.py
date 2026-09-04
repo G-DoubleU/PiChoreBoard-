@@ -12,7 +12,8 @@ pygame.init()
 #Display
 WIDTH = 1280
 HEIGHT = 720
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)pygame.display.set_caption("Chore Board")
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+pygame.display.set_caption("Chore Board")
 clock = pygame.time.Clock()
 
 #Colors
